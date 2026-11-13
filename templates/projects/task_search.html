@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block title %}Find tasks{% endblock %}
+{% block content %}
+<div class="page-heading"><div><div class="eyebrow">YOUR WORKSPACE</div><h1>Find a task</h1><p class="muted">Search and combine filters across projects you can access.</p></div></div>
+<section class="filter-panel">
+    <form method="get" class="filter-grid">
+        {% for field in form %}
+        <div class="field {% if field.name == 'overdue' %}filter-checkbox{% endif %}"><label for="{{ field.id_for_label }}">{{ field.label }}</label>{{ field }}{{ field.errors }}</div>
+        {% endfor %}
+        <div class="filter-actions"><button class="button button-primary" type="submit">Search tasks</button><a class="button button-secondary" href="{% url 'task_search' %}">Clear filters</a></div>
+    </form>
+</section>
+<section class="section-block search-results">
+    <div class="section-heading"><div><h2>Results</h2><p class="muted">{{ result_count }} matching task{{ result_count|pluralize }}</p></div><a class="text-link" href="{% url 'calendar' %}">View calendar ↗</a></div>
+    <div class="search-task-list">
+        {% for task in tasks %}
+        <article class="search-task-row">
+            <span class="task-status-mark status-{{ task.status }}"></span>
+            <a class="search-task-main" href="{{ task.get_absolute_url }}"><strong>{{ task.title }}</strong><small>{{ task.description|default:"No description"|truncatechars:105 }}</small></a>
+            <span class="search-task-project">{{ task.project.name }}</span>
+            <span class="priority-tag priority-{{ task.priority }}">{{ task.get_priority_display }}</span>
+            <span class="search-task-assignee">{% if task.assignee %}{{ task.assignee.username }}{% else %}Unassigned{% endif %}</span>
+            <span class="search-task-due {% if task.is_overdue %}overdue-text{% endif %}">{% if task.due_date %}{{ task.due_date|date:"M j, Y" }}{% else %}No due date{% endif %}</span>
+            <span class="status-label status-{{ task.status }}">{{ task.get_status_display }}</span>
+        </article>
+        {% empty %}<div class="empty-state"><span class="empty-icon">⌕</span><h3>No matching tasks</h3><p>Try changing a filter or clearing the search.</p><a class="button button-secondary" href="{% url 'task_search' %}">Clear filters</a></div>{% endfor %}
+    </div>
+</section>
+{% endblock %}

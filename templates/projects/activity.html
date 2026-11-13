@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block title %}Activity history{% endblock %}
+{% block content %}
+<div class="page-heading"><div><div class="eyebrow">TEAM UPDATES</div><h1>Activity history</h1><p class="muted">A shared timeline of changes in projects you belong to.</p></div></div>
+<section class="activity-history-panel">
+    <form method="get" class="activity-filter"><label for="activity-project">Filter by project</label><select id="activity-project" name="project"><option value="">All projects</option>{% for project in projects %}<option value="{{ project.pk }}" {% if selected_project.pk == project.pk %}selected{% endif %}>{{ project.name }}</option>{% endfor %}</select><button class="button button-secondary button-small" type="submit">Filter</button>{% if selected_project %}<a class="text-link" href="{% url 'activity_history' %}">Clear</a>{% endif %}</form>
+    <div class="activity-timeline full-timeline">
+        {% for activity in activities %}
+        <article class="activity-row">
+            <span class="activity-dot"></span>
+            <div class="activity-copy">
+                <p><strong>{% if activity.actor %}{{ activity.actor.username }}{% else %}A former member{% endif %}</strong> {{ activity.get_action_display|lower }}{% if activity.task %} <a href="{{ activity.task.get_absolute_url }}">{{ activity.task.title }}</a>{% else %} <a href="{{ activity.project.get_absolute_url }}">{{ activity.project.name }}</a>{% endif %}</p>
+                {% if activity.detail %}<p class="activity-detail">{{ activity.detail }}</p>{% endif %}
+                <small><a href="{{ activity.project.get_absolute_url }}">{{ activity.project.name }}</a> · {{ activity.created_at|date:"M j, Y · g:i A" }}</small>
+            </div>
+        </article>
+        {% empty %}<div class="empty-state"><span class="empty-icon">◷</span><h3>No activity to show</h3><p>Project and task changes will appear here as your team works.</p><a class="button button-secondary" href="{% url 'dashboard' %}">Back to overview</a></div>{% endfor %}
+    </div>
+</section>
+{% endblock %}

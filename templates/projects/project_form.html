@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block title %}{{ title }}{% endblock %}
+{% block content %}
+<div class="breadcrumbs"><a href="{% url 'dashboard' %}">Projects</a><span>/</span><span>{{ title }}</span></div>
+<section class="form-panel narrow-panel">
+    <div class="eyebrow">PROJECT DETAILS</div><h1>{{ title }}</h1><p class="muted">Give your team a clear place to plan and deliver work.</p>
+    <form method="post" class="stack-form">{% csrf_token %}
+        {% for field in form %}<div class="field"><label for="{{ field.id_for_label }}">{{ field.label }}</label>{{ field }}{{ field.errors }}{% if field.help_text %}<small class="help-text">{{ field.help_text }}</small>{% endif %}</div>{% endfor %}
+        <div class="form-actions"><a class="button button-secondary" href="{% if project %}{{ project.get_absolute_url }}{% else %}{% url 'dashboard' %}{% endif %}">Cancel</a><button class="button button-primary" type="submit">Save project</button></div>
+    </form>
+</section>
+{% endblock %}

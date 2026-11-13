@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block title %}Notifications{% endblock %}
+{% block content %}
+<div class="page-heading"><div><div class="eyebrow">STAY IN THE LOOP</div><h1>Notifications</h1><p class="muted">Updates about tasks assigned to you and conversations that need your attention.</p></div></div>
+<section class="notification-list">
+    {% for notification in notifications %}
+    <article class="notification-item {% if not notification.is_read %}unread{% endif %}">
+        <span class="notification-icon">{% if notification.actor %}{{ notification.actor.username|first|upper }}{% else %}•{% endif %}</span>
+        <div class="notification-copy"><p>{{ notification.message }}</p><span>{{ notification.task.project.name }} · {{ notification.created_at|date:"M j, Y · g:i A" }}</span></div>
+        <a class="button button-secondary button-small" href="{{ notification.task.get_absolute_url }}">Open task</a>
+        {% if not notification.is_read %}<form method="post" action="{% url 'notification_read' notification.pk %}">{% csrf_token %}<button class="button button-primary button-small" type="submit">Mark read</button></form>{% else %}<span class="read-indicator">Read</span>{% endif %}
+    </article>
+    {% empty %}<div class="empty-state"><span class="empty-icon">♧</span><h3>You're all caught up</h3><p>New task assignments and comments will show up here.</p><a class="button button-secondary" href="{% url 'dashboard' %}">Back to overview</a></div>{% endfor %}
+</section>
+{% endblock %}

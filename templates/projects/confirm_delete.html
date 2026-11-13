@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block title %}Confirm deletion{% endblock %}
+{% block content %}
+<section class="form-panel narrow-panel confirm-panel">
+    <span class="confirm-icon">!</span><div class="eyebrow">PLEASE CONFIRM</div><h1>Delete “{{ object }}”?</h1>
+    <p class="muted">This action cannot be undone. Related tasks, comments, and notifications will also be removed where applicable.</p>
+    <form method="post" class="form-actions">{% csrf_token %}<a class="button button-secondary" href="{{ cancel_url }}">Cancel</a><button class="button button-danger" type="submit">Delete permanently</button></form>
+</section>
+{% endblock %}

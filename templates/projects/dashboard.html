@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block title %}Overview{% endblock %}
+{% block content %}
+<div class="page-heading heading-row">
+    <div><div class="eyebrow">YOUR WORKSPACE</div><h1>Good work starts here, {{ user.username }}.</h1><p class="muted">A clear view of your team's progress and what needs attention.</p></div>
+    <div class="heading-actions"><a class="button button-secondary" href="{% url 'calendar' %}">▣ Calendar</a><a class="button button-primary" href="{% url 'project_create' %}"><span>＋</span> New project</a></div>
+</div>
+<section class="summary-grid advanced-summary" aria-label="Workspace statistics">
+    <article class="summary-card"><span class="summary-icon violet">▦</span><div><span class="summary-value">{{ totals.projects }}</span><span class="summary-label">Total projects</span></div></article>
+    <article class="summary-card"><span class="summary-icon blue">◷</span><div><span class="summary-value">{{ totals.total }}</span><span class="summary-label">Total tasks</span></div></article>
+    <article class="summary-card"><span class="summary-icon mint">✓</span><div><span class="summary-value">{{ totals.completed }}</span><span class="summary-label">Completed</span></div></article>
+    <article class="summary-card"><span class="summary-icon amber">○</span><div><span class="summary-value">{{ totals.pending }}</span><span class="summary-label">To do</span></div></article>
+    <article class="summary-card"><span class="summary-icon blue">↗</span><div><span class="summary-value">{{ totals.in_progress }}</span><span class="summary-label">In progress</span></div></article>
+    <article class="summary-card"><span class="summary-icon rose">!</span><div><span class="summary-value">{{ totals.overdue }}</span><span class="summary-label">Overdue</span></div></article>
+</section>
+<section class="dashboard-progress-panel">
+    <div class="dashboard-progress-copy"><div class="eyebrow">OVERALL PROJECT PROGRESS</div><h2>{{ totals.progress }}<small>%</small></h2><p class="muted">{{ totals.completed }} of {{ totals.total }} tasks completed across your projects</p></div>
+    <div class="dashboard-progress-visual"><div class="progress-track progress-track-large"><span style="width: {{ totals.progress }}%"></span></div><div class="progress-legend"><span><i class="legend-dot done"></i>{{ totals.completed }} completed</span><span><i class="legend-dot remaining"></i>{{ totals.remaining }} remaining</span></div></div>
+</section>
+<div class="dashboard-grid">
+    <section class="dashboard-panel">
+        <div class="section-heading"><div><div class="eyebrow">PROJECTS</div><h2>Recently created</h2></div><a class="text-link" href="{% url 'project_create' %}">＋ New project</a></div>
+        {% for project in projects %}
+        <a class="recent-project-row" href="{{ project.get_absolute_url }}"><span class="project-icon">{{ project.name|first|upper }}</span><span class="recent-project-copy"><strong>{{ project.name }}</strong><small>{{ project.task_count }} tasks · {{ project.members.count }} members</small></span><span class="recent-project-progress">{{ project.progress }}%</span><span class="row-arrow">↗</span></a>
+        {% empty %}<div class="compact-empty"><span class="empty-icon">▦</span><strong>No projects yet</strong><p>Create a project to start organizing your team's work.</p><a class="button button-primary button-small" href="{% url 'project_create' %}">Create project</a></div>{% endfor %}
+    </section>
+    <section class="dashboard-panel">
+        <div class="section-heading"><div><div class="eyebrow">KEEP MOVING</div><h2>Recently updated tasks</h2></div><a class="text-link" href="{% url 'task_search' %}">Find tasks ↗</a></div>
+        <div class="dashboard-task-list">
+            {% for task in recent_tasks %}
+            <a class="dashboard-task-row" href="{{ task.get_absolute_url }}"><span class="task-status-mark status-{{ task.status }}"></span><span class="dashboard-task-copy"><strong>{{ task.title }}</strong><small>{{ task.project.name }} · {% if task.assignee %}{{ task.assignee.username }}{% else %}Unassigned{% endif %}</small></span><span class="priority-tag priority-{{ task.priority }}">{{ task.get_priority_display }}</span></a>
+            {% empty %}<div class="compact-empty"><strong>No task updates yet</strong><p>Tasks you create or update will appear here.</p></div>{% endfor %}
+        </div>
+    </section>
+    <section class="dashboard-panel">
+        <div class="section-heading"><div><div class="eyebrow">COMING UP</div><h2>Upcoming deadlines</h2></div><a class="text-link" href="{% url 'calendar' %}">Open calendar ↗</a></div>
+        <div class="deadline-list">
+            {% for task in upcoming_tasks %}
+            <a class="deadline-row" href="{{ task.get_absolute_url }}"><span class="deadline-date"><strong>{{ task.due_date|date:"j" }}</strong><small>{{ task.due_date|date:"M" }}</small></span><span class="deadline-copy"><strong>{{ task.title }}</strong><small>{{ task.project.name }}{% if task.assignee %} · {{ task.assignee.username }}{% endif %}</small></span><span class="status-label status-{{ task.status }}">{{ task.get_status_display }}</span></a>
+            {% empty %}<div class="compact-empty"><strong>Nothing due this week</strong><p>Tasks with deadlines in the next 7 days will show up here.</p></div>{% endfor %}
+        </div>
+    </section>
+    <section class="dashboard-panel activity-panel">
+        <div class="section-heading"><div><div class="eyebrow">TEAM UPDATES</div><h2>Recent activity</h2></div><a class="text-link" href="{% url 'activity_history' %}">View all ↗</a></div>
+        <div class="activity-timeline">
+            {% for activity in recent_activities %}
+            <article class="activity-row"><span class="activity-dot"></span><div class="activity-copy"><p><strong>{% if activity.actor %}{{ activity.actor.username }}{% else %}A former member{% endif %}</strong> {{ activity.get_action_display|lower }}{% if activity.task %} <a href="{{ activity.task.get_absolute_url }}">{{ activity.task.title }}</a>{% else %} <a href="{{ activity.project.get_absolute_url }}">{{ activity.project.name }}</a>{% endif %}</p><small>{{ activity.project.name }} · {{ activity.created_at|date:"M j, g:i A" }}</small></div></article>
+            {% empty %}<div class="compact-empty"><strong>No activity yet</strong><p>Project and task updates will appear here.</p></div>{% endfor %}
+        </div>
+    </section>
+</div>
+{% endblock %}

@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block title %}{{ task.title }}{% endblock %}
+{% block content %}
+<div class="breadcrumbs"><a href="{% url 'dashboard' %}">Projects</a><span>/</span><a href="{{ project.get_absolute_url }}">{{ project.name }}</a><span>/</span><span>{{ task.title }}</span></div>
+<div class="task-detail-layout">
+    <main>
+        <section class="task-detail-card">
+            <div class="task-card-top"><span class="priority-tag priority-{{ task.priority }}">{{ task.get_priority_display }} priority</span><span class="status-label status-{{ task.status }}">{{ task.get_status_display }}</span></div>
+            <h1>{{ task.title }}</h1><p class="task-description">{{ task.description|default:"No description provided."|linebreaksbr }}</p>
+            <div class="task-facts"><div><span>ASSIGNEE</span><strong>{% if task.assignee %}{{ task.assignee.username }}{% else %}Unassigned{% endif %}</strong></div><div><span>DUE DATE</span><strong>{{ task.due_date|date:"M j, Y"|default:"Not set" }}</strong></div><div><span>CREATED BY</span><strong>{{ task.created_by.username }}</strong></div></div>
+            {% if can_manage_task %}<div class="form-actions task-actions"><a class="button button-secondary button-small" href="{% url 'task_edit' project.pk task.pk %}">Edit task</a><a class="button button-danger-ghost button-small" href="{% url 'task_delete' project.pk task.pk %}">Delete task</a></div>{% endif %}
+        </section>
+        <section class="comments-section">
+            <div class="section-heading"><div><h2>Discussion</h2><p class="muted">Share updates and keep the conversation in one place.</p></div><span class="count-pill">{{ task.comments.count }} comments</span></div>
+            <form method="post" class="comment-composer">{% csrf_token %}<div class="avatar">{{ user.username|first|upper }}</div><div class="comment-input-wrap"><label class="sr-only" for="{{ comment_form.body.id_for_label }}">Add a comment</label>{{ comment_form.body }}{{ comment_form.body.errors }}<button class="button button-primary button-small" type="submit">Post comment</button></div></form>
+            <div class="comment-list">
+                {% for comment in task.comments.all %}
+                <article class="comment">
+                    <span class="avatar">{{ comment.author.username|first|upper }}</span><div class="comment-content"><div class="comment-heading"><strong>{{ comment.author.username }}</strong><time>{{ comment.created_at|date:"M j, Y · g:i A" }}</time></div><p>{{ comment.body|linebreaksbr }}</p></div>
+                    {% if comment.author_id == user.pk or project.owner_id == user.pk %}<form method="post" action="{% url 'comment_delete' project.pk task.pk comment.pk %}">{% csrf_token %}<button class="icon-button" type="submit" aria-label="Delete comment">×</button></form>{% endif %}
+                </article>
+                {% empty %}<div class="empty-inline">No comments yet. Start the conversation.</div>{% endfor %}
+            </div>
+        </section>
+    </main>
+    <aside class="task-side"><section class="side-panel"><div class="side-panel-heading"><h3>Task status</h3></div><form method="post" action="{% url 'task_status' project.pk task.pk %}" class="stack-form">{% csrf_token %}<div class="field"><label for="task-status">Update status</label><select id="task-status" name="status"><option value="todo" {% if task.status == 'todo' %}selected{% endif %}>To Do</option><option value="in_progress" {% if task.status == 'in_progress' %}selected{% endif %}>In Progress</option><option value="completed" {% if task.status == 'completed' %}selected{% endif %}>Completed</option></select></div><button class="button button-secondary button-wide" type="submit">Save status</button></form></section></aside>
+</div>
+{% endblock %}

@@ -1,0 +1,30 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Django and local database
+*.sqlite3
+*.log
+staticfiles/
+media/
+*.coverage
+htmlcov/
+
+# Environment and editor files
+.env
+.env.*
+!.env.example
+.vscode/
+.idea/
+
+# Local data exports and backups
+*.dump
+*.backup
+data-export*.json

@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block title %}{{ project.name }}{% endblock %}
+{% block content %}
+<div class="breadcrumbs"><a href="{% url 'dashboard' %}">Projects</a><span>/</span><span>{{ project.name }}</span></div>
+<section class="project-hero">
+    <div class="project-hero-main"><div class="project-icon large">{{ project.name|first|upper }}</div><div><div class="eyebrow">PROJECT BOARD</div><h1>{{ project.name }}</h1><p class="muted">{{ project.description|default:"No description added yet." }}</p></div></div>
+    <div class="hero-actions">
+        <span class="count-pill">{{ project.members.count }} members</span>
+        {% if is_owner %}<a class="button button-secondary button-small" href="{% url 'project_edit' project.pk %}">Edit project</a><a class="button button-danger-ghost button-small" href="{% url 'project_delete' project.pk %}">Delete</a>{% endif %}
+        <a class="button button-primary button-small" href="{% url 'task_create' project.pk %}">＋ Add task</a>
+    </div>
+</section>
+<div class="project-layout">
+    <section class="board-section">
+        <div class="section-heading board-heading"><div><h2>Board</h2><p class="muted">Drag a card to move it, or use its status menu.</p></div><span class="count-pill">{{ project.task_count }} tasks</span></div>
+        <div class="board">
+            {% for status, label, tasks in board %}
+            <section class="board-column" data-board-column data-column-status="{{ status }}">
+                <header class="column-heading"><span class="status-dot {{ status }}"></span><h3>{{ label }}</h3><span class="column-count">{{ tasks|length }}</span></header>
+                <div class="task-list">
+                    {% for task in tasks %}
+                    <article class="task-card" data-task-card data-status="{{ task.status }}" draggable="true">
+                        <div class="task-card-top"><span class="priority-tag priority-{{ task.priority }}">{{ task.get_priority_display }}</span><a class="card-arrow" href="{{ task.get_absolute_url }}" aria-label="Open {{ task.title }}">↗</a></div>
+                        <a class="task-title" href="{{ task.get_absolute_url }}">{{ task.title }}</a>
+                        {% if task.description %}<p class="task-excerpt">{{ task.description|truncatechars:90 }}</p>{% endif %}
+                        <div class="task-card-meta"><span>{% if task.assignee %}<span class="avatar tiny">{{ task.assignee.username|first|upper }}</span>{{ task.assignee.username }}{% else %}Unassigned{% endif %}</span><span>{% if task.due_date %}{{ task.due_date|date:"M j" }}{% else %}No due date{% endif %}</span></div>
+                        <form class="status-form" method="post" action="{% url 'task_status' project.pk task.pk %}" data-status-form>{% csrf_token %}<label class="sr-only" for="status-{{ task.pk }}">Change task status</label><select id="status-{{ task.pk }}" name="status"><option value="todo" {% if task.status == 'todo' %}selected{% endif %}>To Do</option><option value="in_progress" {% if task.status == 'in_progress' %}selected{% endif %}>In Progress</option><option value="completed" {% if task.status == 'completed' %}selected{% endif %}>Completed</option></select><noscript><button class="button button-secondary button-small" type="submit">Update</button></noscript></form>
+                    </article>
+                    {% empty %}<div class="column-empty">No tasks here yet.</div>{% endfor %}
+                </div>
+            </section>
+            {% endfor %}
+        </div>
+        <p class="board-live-message" data-board-message role="status" aria-live="polite"></p>
+    </section>
+    <aside class="project-aside">
+        <section class="side-panel">
+            <div class="side-panel-heading"><h3>Team</h3><span class="count-pill">{{ project.members.count }}</span></div>
+            <div class="member-list">{% for member in members %}<div class="member-row"><span class="avatar">{{ member.username|first|upper }}</span><span>{{ member.username }}{% if member.pk == project.owner_id %}<small>Project owner</small>{% endif %}</span></div>{% endfor %}</div>
+            {% if is_owner %}<form method="post" action="{% url 'add_member' project.pk %}" class="member-form">{% csrf_token %}<label for="{{ member_form.user.id_for_label }}">Add a teammate</label>{{ member_form.user }}<button class="button button-secondary button-small button-wide" type="submit">Add member</button></form>{% endif %}
+        </section>
+        <section class="side-panel progress-panel" data-total-tasks="{{ project.task_count }}"><div class="side-panel-heading"><h3>Project progress</h3></div><div class="progress-large"><span data-project-progress>{{ project.progress }}</span><small>%</small></div><p class="muted"><span data-completed-count>{{ completed_task_count }}</span> tasks completed</p><div class="progress-track"><span data-progress-bar style="width: {{ project.progress }}%"></span></div></section>
+    </aside>
+</div>
+{% endblock %}

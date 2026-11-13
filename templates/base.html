@@ -1,0 +1,60 @@
+{% load static %}
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#f5f7fb">
+    <title>{% block title %}Workspace{% endblock %} · Taskflow</title>
+    <link rel="stylesheet" href="{% static 'projects/css/app.css' %}">
+</head>
+<body>
+{% if user.is_authenticated %}
+<div class="app-shell">
+    <aside class="sidebar" id="sidebar">
+        <a class="brand" href="{% url 'dashboard' %}"><span class="brand-mark">T</span><span>taskflow</span></a>
+        <p class="nav-caption">WORKSPACE</p>
+        <nav class="side-nav" aria-label="Main navigation">
+            <a href="{% url 'dashboard' %}" class="{% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
+                <span class="nav-icon">⌂</span> Overview
+            </a>
+            <a href="{% url 'dashboard' %}"><span class="nav-icon">▦</span> My projects</a>
+            <a href="{% url 'task_search' %}" class="{% if request.resolver_match.url_name == 'task_search' %}active{% endif %}"><span class="nav-icon">⌕</span> Find tasks</a>
+            <a href="{% url 'calendar' %}" class="{% if request.resolver_match.url_name == 'calendar' %}active{% endif %}"><span class="nav-icon">▣</span> Calendar</a>
+            <a href="{% url 'activity_history' %}" class="{% if request.resolver_match.url_name == 'activity_history' %}active{% endif %}"><span class="nav-icon">◷</span> Activity</a>
+            <a href="{% url 'notifications' %}" class="{% if request.resolver_match.url_name == 'notifications' %}active{% endif %}">
+                <span class="nav-icon">♧</span> Notifications
+                {% if unread_notification_count %}<span class="nav-badge">{{ unread_notification_count }}</span>{% endif %}
+            </a>
+        </nav>
+        <div class="sidebar-bottom">
+            <div class="profile-chip"><span class="avatar">{{ user.username|first|upper }}</span><span class="profile-name">{{ user.username }}<small>Workspace member</small></span></div>
+            <form method="post" action="{% url 'logout' %}">{% csrf_token %}<button class="nav-link-button" type="submit"><span class="nav-icon">↪</span> Sign out</button></form>
+        </div>
+    </aside>
+    <main class="main-area">
+        <header class="topbar">
+            <button type="button" class="menu-toggle" id="menu-toggle" aria-label="Toggle navigation" aria-expanded="false">☰</button>
+            <span class="topbar-label">Your workspace</span>
+            <a class="topbar-notifications" href="{% url 'notifications' %}" aria-label="Notifications">♧{% if unread_notification_count %}<span>{{ unread_notification_count }}</span>{% endif %}</a>
+        </header>
+        <div class="page-content">
+            {% if messages %}
+                <div class="messages" aria-live="polite">
+                    {% for message in messages %}<div class="alert alert-{{ message.tags|default:'info' }}">{{ message }}</div>{% endfor %}
+                </div>
+            {% endif %}
+            {% block content %}{% endblock %}
+        </div>
+    </main>
+</div>
+<script src="{% static 'projects/js/app.js' %}" defer></script>
+{% else %}
+<main class="auth-shell">
+    <a class="brand auth-brand" href="{% url 'login' %}"><span class="brand-mark">T</span><span>taskflow</span></a>
+    {% if messages %}<div class="messages">{% for message in messages %}<div class="alert alert-{{ message.tags|default:'info' }}">{{ message }}</div>{% endfor %}</div>{% endif %}
+    {% block auth_content %}{% endblock %}
+</main>
+{% endif %}
+</body>
+</html>

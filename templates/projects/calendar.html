@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block title %}Calendar{% endblock %}
+{% block content %}
+<div class="page-heading calendar-page-heading"><div><div class="eyebrow">PLAN AHEAD</div><h1>Calendar</h1><p class="muted">Tasks with due dates across your projects.</p></div><a class="button button-secondary" href="{% url 'task_search' %}">⌕ Find tasks</a></div>
+<section class="calendar-panel">
+    <form method="get" class="calendar-toolbar">
+        {% if form.errors %}<div class="form-errors calendar-errors">{{ form.errors }}</div>{% endif %}
+        <div class="calendar-filters">
+            <div class="field"><label class="sr-only" for="{{ form.view.id_for_label }}">Calendar view</label>{{ form.view }}</div>
+            <div class="field"><label class="sr-only" for="{{ form.project.id_for_label }}">Filter by project</label>{{ form.project }}</div>
+            <div class="field"><label class="sr-only" for="calendar-date">Choose date</label><input id="calendar-date" type="date" name="date" value="{{ selected_date|date:'Y-m-d' }}"></div>
+            <button class="button button-secondary button-small" type="submit">Apply</button>
+        </div>
+        <div class="calendar-navigation">
+            <a class="button button-secondary button-small" href="?view={{ view_mode }}&date={{ previous_date|date:'Y-m-d' }}{% if selected_project %}&project={{ selected_project.pk }}{% endif %}" aria-label="Previous {{ view_mode }}">‹</a>
+            <h2>{% if view_mode == 'week' %}{{ calendar_weeks.0.0.date|date:"M j" }} – {{ calendar_weeks.0.6.date|date:"M j, Y" }}{% else %}{{ selected_date|date:"F Y" }}{% endif %}</h2>
+            <a class="button button-secondary button-small" href="?view={{ view_mode }}&date={{ next_date|date:'Y-m-d' }}{% if selected_project %}&project={{ selected_project.pk }}{% endif %}" aria-label="Next {{ view_mode }}">›</a>
+            <a class="today-link" href="?view={{ view_mode }}&date={{ today|date:'Y-m-d' }}{% if selected_project %}&project={{ selected_project.pk }}{% endif %}">Today</a>
+        </div>
+    </form>
+    <div class="calendar-grid {% if view_mode == 'week' %}week-view{% endif %}">
+        <div class="calendar-weekdays">{% for day in calendar_weeks.0 %}<div>{{ day.date|date:"D" }}</div>{% endfor %}</div>
+        {% for week in calendar_weeks %}
+        <div class="calendar-week">
+            {% for day in week %}
+            <section class="calendar-day {% if not day.in_current_month and view_mode == 'month' %}outside-month{% endif %} {% if day.is_today %}is-today{% endif %}">
+                <header class="calendar-day-heading"><time datetime="{{ day.date|date:'Y-m-d' }}" class="{% if day.is_today %}today-number{% endif %}">{{ day.date|date:"j" }}</time>{% if day.is_today %}<span>Today</span>{% endif %}</header>
+                <div class="calendar-day-tasks">
+                    {% for task in day.tasks %}
+                    <a class="calendar-task status-border-{{ task.status }} {% if task.is_overdue %}calendar-task-overdue{% endif %}" href="{{ task.get_absolute_url }}" title="{{ task.title }} · {{ task.project.name }}">
+                        <strong>{{ task.title }}</strong><span>{{ task.get_status_display }}{% if selected_project == None %} · {{ task.project.name }}{% endif %}</span>
+                    </a>
+                    {% endfor %}
+                </div>
+            </section>
+            {% endfor %}
+        </div>
+        {% endfor %}
+    </div>
+    <div class="calendar-legend"><span><i class="legend-dot status-todo"></i>To Do</span><span><i class="legend-dot status-in_progress"></i>In Progress</span><span><i class="legend-dot status-completed"></i>Completed</span><span><i class="legend-dot overdue-legend"></i>Overdue</span></div>
+</section>
+{% endblock %}

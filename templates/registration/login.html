@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block title %}Sign in{% endblock %}
+{% block auth_content %}
+<section class="auth-card">
+    <div class="eyebrow">WELCOME BACK</div>
+    <h1>Sign in to your workspace</h1>
+    <p class="muted">Pick up where your team left off.</p>
+    <form method="post" class="stack-form">{% csrf_token %}
+        {% if form.non_field_errors %}<div class="form-errors">{{ form.non_field_errors }}</div>{% endif %}
+        <div class="field"><label for="{{ form.username.id_for_label }}">Username</label>{{ form.username }}{{ form.username.errors }}</div>
+        <div class="field"><label for="{{ form.password.id_for_label }}">Password</label>{{ form.password }}{{ form.password.errors }}</div>
+        <button class="button button-primary button-wide" type="submit">Sign in</button>
+    </form>
+    <p class="auth-switch">New to Taskflow? <a href="{% url 'register' %}">Create an account</a></p>
+</section>
+{% endblock %}
