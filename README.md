@@ -40,7 +40,7 @@ Open <http://127.0.0.1:8000/> and create an account or sign in. The SQLite datab
 
 The additive activity-history migration creates a new table; it does not replace existing models or delete project data. Apply it to an existing local database with `python manage.py migrate`.
 
-The checked-in `.env.example` lists supported variables but is not loaded automatically by Django. With no deployment environment variables set, local defaults keep SQLite and debug mode for the `runserver` workflow. If you configure `DJANGO_SECRET_KEY`, `ALLOWED_HOSTS`, `DATABASE_URL`, or `RENDER_EXTERNAL_HOSTNAME` locally, set `DJANGO_DEBUG=True` explicitly; when any of these deployment settings are present, an unset `DJANGO_DEBUG` defaults to False. Production should set `DJANGO_DEBUG=False` explicitly.
+The checked-in `.env.example` lists supported variables but is not loaded automatically by Django. The local default is `DJANGO_DEBUG=True` and SQLite, even when other environment variables are present. Set `DJANGO_DEBUG=False` explicitly in production and provide a strong `SECRET_KEY` or `DJANGO_SECRET_KEY`.
 
 For production, set a private `DJANGO_SECRET_KEY`, `DJANGO_DEBUG=False`, configure `ALLOWED_HOSTS` and `CSRF_TRUSTED_ORIGINS`, use a PostgreSQL `DATABASE_URL`, and serve the app over HTTPS. See [DEPLOYMENT.md](./DEPLOYMENT.md) for the exact Render setup.
 

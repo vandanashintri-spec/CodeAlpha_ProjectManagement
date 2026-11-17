@@ -62,7 +62,7 @@ Replace the URL with your own. Never add a database dump, `.env` file, or secret
 2. Connect your GitHub account, choose the repository you just created, and select the branch to deploy.
 3. Review `render.yaml`. It creates a Python web service and a PostgreSQL database in the Oregon region. Change the region for both services together if you need another region.
 4. Review the current price for the `starter` web plan and `basic-256mb` database, then approve creation. Do not approve paid resources unless you intend to pay for them.
-5. Render generates `DJANGO_SECRET_KEY` and injects the PostgreSQL `DATABASE_URL`. The blueprint sets `DJANGO_DEBUG=false` and `SECURE_SSL_REDIRECT=true`. Render's `RENDER_EXTERNAL_HOSTNAME` is used to configure the service host and trusted HTTPS origin.
+5. Render generates `DJANGO_SECRET_KEY` and injects the PostgreSQL `DATABASE_URL`. The blueprint sets `DJANGO_DEBUG=false`; that enables HTTPS redirects, secure cookies, and one-year HSTS (without subdomain or preload directives). Render's `RENDER_EXTERNAL_HOSTNAME` is used to configure the service host and trusted HTTPS origin.
 6. Wait for the build, pre-deploy migration, and health check to finish. Build runs `pip install -r requirements.txt` and `collectstatic`; the pre-deploy command runs `python manage.py migrate`; Gunicorn serves the app.
 
 Do not set `DEBUG=True` on the live service. If you add a custom domain, set `ALLOWED_HOSTS` to its exact hostname and `CSRF_TRUSTED_ORIGINS` to its HTTPS origin in the Render environment. Separate multiple values with commas.
@@ -129,7 +129,7 @@ SMTP is not needed by the current application. If a future feature sends email, 
 
 ## Troubleshooting
 
-- **`DJANGO_SECRET_KEY must be set`**: set a private `DJANGO_SECRET_KEY` in the service environment. Render's blueprint generates one.
+- **Production secret-key error**: set a private, strong `SECRET_KEY` or `DJANGO_SECRET_KEY` in the service environment. Render's blueprint generates `DJANGO_SECRET_KEY`.
 - **`DisallowedHost`**: set `ALLOWED_HOSTS` to the exact host or confirm Render supplied `RENDER_EXTERNAL_HOSTNAME`.
 - **CSRF failure on the Render domain**: set `CSRF_TRUSTED_ORIGINS` to the full `https://your-service.onrender.com` origin (scheme included), with no trailing path.
 - **Static files missing**: check the build log for `collectstatic`, confirm WhiteNoise is installed, and redeploy after correcting the failing build.
@@ -140,7 +140,7 @@ SMTP is not needed by the current application. If a future feature sends email, 
 
 ## Security and operations notes
 
-- Production requires `DJANGO_DEBUG=False`, a secret key, valid allowed hosts, HTTPS, secure cookies, and PostgreSQL. The settings fail fast if production secret/host configuration is missing.
+- Production requires `DJANGO_DEBUG=False`, a strong environment-provided secret key, valid allowed hosts, HTTPS, secure cookies, and PostgreSQL. The settings fail fast if production secret/host configuration is missing.
 - Production migrations are additive and do not reset or delete existing records.
 - SQLite is retained for local development. It is not recommended as the database for a multi-instance production web service.
 - Render deployment, database connection, backups, SMTP, custom domains, and uploaded-file persistence have not been tested or configured from this workspace.

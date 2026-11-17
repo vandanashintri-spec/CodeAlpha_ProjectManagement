@@ -6,7 +6,7 @@ from django.test import Client, TestCase
 from django.urls import reverse
 from django.utils import timezone
 
-from config.settings import _debug_default
+from config.settings import _env_bool
 
 from .models import Activity, Membership, Notification, Project, Task, TaskComment
 
@@ -80,13 +80,17 @@ class ProjectManagementTests(TestCase):
             405,
         )
 
-    def test_debug_defaults_off_when_deployment_environment_is_present(self):
+    def test_debug_defaults_to_true_even_when_deployment_environment_is_present(self):
         with patch.dict(
             os.environ,
             {"DJANGO_SECRET_KEY": "deployment-key", "ALLOWED_HOSTS": "example.com"},
             clear=True,
         ):
-            self.assertFalse(_debug_default())
+            self.assertTrue(_env_bool("DJANGO_DEBUG", True))
+
+    def test_debug_can_be_disabled_with_environment_variable(self):
+        with patch.dict(os.environ, {"DJANGO_DEBUG": "false"}, clear=True):
+            self.assertFalse(_env_bool("DJANGO_DEBUG", True))
 
     def test_dashboard_requires_login_and_project_creation_adds_owner(self):
         self.assertRedirects(self.client.get(reverse("dashboard")), f"{reverse('login')}?next=/")

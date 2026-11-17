@@ -13,8 +13,6 @@ services:
         generateValue: true
       - key: DJANGO_DEBUG
         value: "false"
-      - key: SECURE_SSL_REDIRECT
-        value: "true"
       - key: DATABASE_URL
         fromDatabase:
           name: codealpha-project-management-db

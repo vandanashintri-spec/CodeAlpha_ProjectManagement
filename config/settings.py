@@ -1,4 +1,5 @@
 import os
+import secrets
 from pathlib import Path
 
 import dj_database_url
@@ -14,22 +15,22 @@ def _env_bool(name, default):
     return value.strip().lower() in {"1", "true", "yes", "on"}
 
 
-def _debug_default():
-    deployment_variables = (
-        "DJANGO_SECRET_KEY",
-        "ALLOWED_HOSTS",
-        "DATABASE_URL",
-        "RENDER_EXTERNAL_HOSTNAME",
-    )
-    return not any(os.environ.get(name) for name in deployment_variables)
-
-
-DEBUG = _env_bool("DJANGO_DEBUG", _debug_default())
-SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY")
+DEBUG = _env_bool("DJANGO_DEBUG", True)
+SECRET_KEY = os.environ.get("SECRET_KEY") or os.environ.get("DJANGO_SECRET_KEY")
 if not SECRET_KEY:
     if not DEBUG:
-        raise ImproperlyConfigured("DJANGO_SECRET_KEY must be set when DJANGO_DEBUG is false.")
-    SECRET_KEY = "django-insecure-local-development-key-change-before-deployment"
+        raise ImproperlyConfigured(
+            "Set SECRET_KEY or DJANGO_SECRET_KEY when DJANGO_DEBUG is false."
+        )
+    SECRET_KEY = secrets.token_urlsafe(50)
+elif not DEBUG and (
+    len(SECRET_KEY) < 50
+    or len(set(SECRET_KEY)) < 20
+    or SECRET_KEY.startswith("django-insecure-")
+):
+    raise ImproperlyConfigured(
+        "Production SECRET_KEY must be at least 50 characters and sufficiently unpredictable."
+    )
 
 ALLOWED_HOSTS = [
     host.strip()
@@ -162,12 +163,16 @@ STORAGES = {
     },
 }
 
-SECURE_SSL_REDIRECT = _env_bool("SECURE_SSL_REDIRECT", not DEBUG)
-SECURE_HSTS_SECONDS = int(
-    os.environ.get("SECURE_HSTS_SECONDS", "0" if DEBUG else "31536000")
+if not DEBUG:
+    SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+SECURE_SSL_REDIRECT = not DEBUG
+SECURE_HSTS_SECONDS = (
+    int(os.environ.get("SECURE_HSTS_SECONDS", "31536000")) if not DEBUG else 0
 )
-SECURE_HSTS_INCLUDE_SUBDOMAINS = _env_bool("SECURE_HSTS_INCLUDE_SUBDOMAINS", False)
-SECURE_HSTS_PRELOAD = _env_bool("SECURE_HSTS_PRELOAD", False)
+SECURE_HSTS_INCLUDE_SUBDOMAINS = (
+    _env_bool("SECURE_HSTS_INCLUDE_SUBDOMAINS", False) if not DEBUG else False
+)
+SECURE_HSTS_PRELOAD = _env_bool("SECURE_HSTS_PRELOAD", False) if not DEBUG else False
 SECURE_CONTENT_TYPE_NOSNIFF = True
 SECURE_REFERRER_POLICY = "same-origin"
 SESSION_COOKIE_SECURE = not DEBUG
@@ -175,8 +180,6 @@ CSRF_COOKIE_SECURE = not DEBUG
 SESSION_COOKIE_HTTPONLY = True
 SESSION_COOKIE_SAMESITE = "Lax"
 CSRF_COOKIE_SAMESITE = "Lax"
-if not DEBUG:
-    SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
 EMAIL_BACKEND = (
     "django.core.mail.backends.smtp.EmailBackend"
